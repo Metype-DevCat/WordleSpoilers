@@ -1,17 +1,20 @@
-const Database = require("@replit/database")
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const fs = require("fs");
 
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('report-incorrect')
 		.setDescription('Sends a report whenever the spoiler seems to not match the word.'),
 	async execute(interaction) {
-    const db = new Database();
-    db.get(`${interaction.guild.id}:reports`).then(value => {
-      if(value == undefined) value = 0;
-          db.set(`${interaction.guild.id}:reports`, value++).then(() => {
-          return interaction.reply(`Report counted.`);
-      });
-    });
+    var path = require('path');
+    const settings = require( path.resolve( __dirname, "../settings.json" ) );
+    if(!settings[interaction.guild.id]) {
+      settings[interaction.guild.id] = {};
+    }
+    let value = settings[interaction.guild.id].reports
+    if(value == undefined) value = 0;
+    settings[interaction.guild.id].reports++;
+    fs.writeFileSync(path.resolve( __dirname, "../settings.json" ) ,JSON.stringify(settings, null, 2));
+    return interaction.reply(`Report counted.`);
 	},
 };

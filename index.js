@@ -1,10 +1,9 @@
 const fs = require('node:fs');
 const { Client, Collection, Intents } = require('discord.js');
-const token = process.env['token'];
 const CronJob = require('cron').CronJob;
 var path = require('path');
+const { token } = require( path.resolve( __dirname, "./config.json" ) );
 const WordleWord = require( path.resolve( __dirname, "./wordle-word.js" ) );
-const Database = require("@replit/database")
 var wd = require("word-definition");
 
 const client = new Client({
@@ -48,11 +47,11 @@ client.on('interactionCreate', async interaction => {
 client.login(token);
 
 var job = new CronJob('0 1 0 * * *', function() {
+  const settings = require( path.resolve( __dirname, "./settings.json" ) );
   const word = WordleWord();
   console.log(word);
-  const db = new Database();
   client.guilds.cache.map((guild) => {   
-    db.get(`${guild.id}:spoiler`).then(value => {
+      let value = settings[guild.id].spoilers;
       if(value == undefined) return;
       let channel = client.channels.cache.get(value);
       if(channel == undefined) return;
@@ -63,7 +62,6 @@ var job = new CronJob('0 1 0 * * *', function() {
         });
       else
         channel.send(`Wordle Spoiler! : \n||Letter ${rand} of the wordle is ${word.substring(rand-1,rand)}||`)
-    });
   });
 }, null, true, 'America/Chicago');
 job.start();
